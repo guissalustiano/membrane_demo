@@ -50,7 +50,8 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
          port: port,
          sps: nil,
          pps: nil,
-         control: nil
+         control: nil,
+         socket: nil
        ],
        pipeline: pipeline
      }}
@@ -70,13 +71,17 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
              get_rtsp_description(connection_status),
            :ok <- setup_rtsp_connection(connection_status),
            {:ok, connection_status} <- start_keep_alive(connection_status),
-           :ok <- play(connection_status) do
+           :ok <- play(connection_status),
+           connection_status <- get_socket(connection_status) do
         Logger.warning(~s"""
         ConnectionManager processes:
           RTSP session: #{inspect(connection_status.rtsp_session)},
           Membrane Pipeline: #{inspect(connection_status.pipeline)},
           RTSP keep alive: #{inspect(connection_status.keep_alive)}
         """)
+
+        # IO.inspect(:inet.sockname(RTSP.get_transport(rtsp_session)), label: "sockname")
+        # IO.inspect(:inet.peername(RTSP.get_transport(rtsp_session)), label: "sockname_peer")
 
         send(
           connection_status.pipeline,
@@ -206,7 +211,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     Logger.debug("ConnectionManager: Setting up RTSP connection")
 
     case RTSP.setup(rtsp_session, "#{pipeline_options[:control]}", [
-           {"Transport", "RTP/AVP;unicast;client_port=#{pipeline_options[:port]}"}
+           {"Transport", "RTP/AVP/TCP;unicast;interleaved=0-1"}
          ]) do
       {:ok, %{status: 200}} ->
         :ok
@@ -244,15 +249,22 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   defp rtsp_keep_alive(rtsp_session) do
-    case RTSP.get_parameter(rtsp_session) do
-      {:ok, %RTSP.Response{status: 200}} ->
-        Process.sleep(@keep_alive_interval)
-        rtsp_keep_alive(rtsp_session)
+    RTSP.get_parameter(rtsp_session)
+  end
 
-      error ->
-        Logger.warning("RTSP ping failed: #{inspect(error)}")
-        Process.exit(self(), :connection_failed)
-    end
+  defp get_socket(%ConnectionStatus{rtsp_session: rtsp_session} = connection_status) do
+    socket_handle = RTSP.get_transport(rtsp_session)
+    {:ok, {address, port_no}} = :inet.sockname(socket_handle)
+
+    socket = %Membrane.TCP.Socket{
+      connection_side: :client,
+      ip_address: address,
+      port_no: port_no,
+      state: :connected,
+      socket_handle: socket_handle
+    }
+
+    Map.update!(connection_status, :pipeline_options, &Keyword.put(&1, :socket, socket))
   end
 
   defp get_sps_pps(%{ExSDP.Attribute.FMTP => fmtp}) do

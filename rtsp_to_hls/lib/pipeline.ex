@@ -48,13 +48,18 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
     Logger.debug("Source received pipeline options: #{inspect(options)}")
 
     structure = [
-      child(
-        :app_source,
-        %Membrane.UDP.Source{
-          local_port_no: state[:port],
-          recv_buffer_size: 500_000
-        }
-      )
+      # child(
+      #   :app_source,
+      #   %Membrane.UDP.Source{
+      #     local_port_no: state[:port],
+      #     recv_buffer_size: 500_000
+      #   }
+      # )
+      child(:app_source, %Membrane.TCP.Source{
+        connection_side: :client,
+        local_socket: options[:socket]
+      })
+      |> child(:tcp_depayloader, Membrane.RTP.TCP.Depayloader)
       |> via_in(:rtp_input)
       |> child(
         :rtp,
