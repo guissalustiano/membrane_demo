@@ -32,7 +32,6 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:connection, "~> 1.1"},
       {:membrane_rtsp, github: "membraneframework/membrane_rtsp", branch: "add-extracting-transport", override: true},
-      {:ex_sdp, github: "membraneframework/ex_sdp", branch: "fix-parsing", override: true},
       # {:membrane_rtsp, "~> 0.5.0"},
       {:membrane_udp_plugin, "~> 0.12.0"},
       {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "add-tcp-depayloader", override: true},

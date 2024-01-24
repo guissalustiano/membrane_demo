@@ -2,7 +2,7 @@ require Logger
 alias Membrane.Demo.RtspToHls
 
 # rtsp_stream_url = "rtsp://localhost:8554/livestream"
-rtsp_stream_url = "rtsp://admin:admin@videstra.ddns.net:8554/0"
+rtsp_stream_url = "rtsp://wrex~wrexDowntownRockford:wrexHD13@amb.videstra.net:42554/wrexDowntownRockford"
 output_path = "hls_output"
 rtp_port = 60000
 

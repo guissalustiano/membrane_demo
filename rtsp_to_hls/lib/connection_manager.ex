@@ -6,7 +6,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
   alias Membrane.RTSP
 
-  @delay 15_000
+  @delay 1_000
   @keep_alive_interval 15_000
 
   defmodule ConnectionStatus do
@@ -226,13 +226,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   defp play(%ConnectionStatus{rtsp_session: rtsp_session}) do
     Logger.debug("ConnectionManager: Setting RTSP on play mode")
 
-    case RTSP.play(rtsp_session) do
-      {:ok, %{status: 200}} ->
-        :ok
-
-      _result ->
-        {:error, :play_rtsp_failed}
-    end
+    RTSP.play_no_response(rtsp_session)
   end
 
   defp start_keep_alive(%ConnectionStatus{rtsp_session: rtsp_session} = connection_status) do

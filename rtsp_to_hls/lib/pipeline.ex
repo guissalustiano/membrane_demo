@@ -108,9 +108,13 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
         %Membrane.H264.Parser{
           spss: spss,
           ppss: ppss,
-          generate_best_effort_timestamps: %{framerate: {30, 1}}
+          generate_best_effort_timestamps: %{framerate: {30, 1}},
+          repeat_parameter_sets: true
         }
       )
+      |> child(%Membrane.Debug.Filter{
+      handle_buffer: &IO.inspect(&1.pts, label: "debug buffer"),
+      })
       |> via_in(:input, options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)])
       |> get_child(:hls)
 
